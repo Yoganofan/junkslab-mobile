@@ -5,9 +5,9 @@ import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // FIX PATH: Menyesuaikan dengan struktur folder baru
-import 'screens/admin/admin_provider.dart'; 
+import 'screens/admin/admin_provider.dart';
 import 'helpers/shared_pref_helper.dart'; // Menggunakan shared pref helper kita
-import 'screens/admin/pages/main_layout.dart'; 
+import 'screens/admin/pages/main_layout.dart';
 
 // IMPORT HALAMAN PENYERAP KAMU
 import 'screens/penyerap/main_penyerap.dart';
@@ -37,15 +37,13 @@ void main() async {
 
 // ATUR RUTE NAVIGASI (Mendukung Admin & Penyerap)
 final GoRouter _router = GoRouter(
-  initialLocation: '/penyerap', // << UBAH KE '/' KALAU MAU TES ADMIN, UBAH KE '/penyerap' UNTUK TES KODINGAN KAMU
+  initialLocation:
+      '/penyerap', // << Memaksa aplikasi langsung ngebuka halaman kamu saat di-run
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const MainLayout(), // Halaman utama Admin
-    ),
+    GoRoute(path: '/', builder: (context, state) => const MainLayout()),
     GoRoute(
       path: '/penyerap',
-      builder: (context, state) => const MainPenyerap(), // Halaman utama Penyerap (Yoga)
+      builder: (context, state) => const MainPenyerap(),
     ),
   ],
 );
@@ -60,7 +58,7 @@ class JunksLabApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'JunksLab App',
           debugShowCheckedModeBanner: false,
-          
+
           // Tema Sinkron dengan Admin Provider
           themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
