@@ -10,18 +10,20 @@ import 'pages/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
-  await PrefsHelper.setLoggedIn(true); 
-  
+
+  await PrefsHelper.setLoggedIn(true);
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AdminProvider()..refreshDashboard()),
+        ChangeNotifierProvider(
+          create: (_) => AdminProvider()..refreshDashboard(),
+        ),
       ],
       child: const JunksLabAdminApp(),
     ),
@@ -30,17 +32,12 @@ void main() async {
 
 final GoRouter _router = GoRouter(
   initialLocation: '/',
-  routes: [
-    GoRoute(
-      path: '/', 
-      builder: (context, state) => const MainLayout() 
-    )
-  ],
+  routes: [GoRoute(path: '/', builder: (context, state) => const MainLayout())],
 );
 
 class JunksLabAdminApp extends StatelessWidget {
   const JunksLabAdminApp({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     // Bungkus dengan Consumer agar bisa mendengar perubahan isDarkMode
@@ -49,27 +46,29 @@ class JunksLabAdminApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'JunksLab Admin',
           debugShowCheckedModeBanner: false,
-          
+
           // Mengatur mode tema berdasarkan Shared Preferences
           themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          
-          // TEMA TERANG 
+
+          // TEMA TERANG
           theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.green,
             scaffoldBackgroundColor: const Color(0xFFF5F7F5),
             cardColor: Colors.white,
           ),
-          
-          // TEMA GELAP 
+
+          // TEMA GELAP
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.green,
-            scaffoldBackgroundColor: const Color(0xFF121212), // Background gelap
+            scaffoldBackgroundColor: const Color(
+              0xFF121212,
+            ), // Background gelap
             cardColor: const Color(0xFF1E1E1E), // Warna kotak gelap
             dividerColor: Colors.grey[800],
           ),
-          
+
           routerConfig: _router,
         );
       },
