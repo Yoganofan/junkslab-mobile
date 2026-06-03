@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'admin_provider.dart';
-import 'prefs_helper.dart';
-import 'pages/main_layout.dart';
+// FIX PATH: Menyesuaikan dengan struktur folder baru
+import 'screens/admin/admin_provider.dart'; 
+import 'helpers/shared_pref_helper.dart'; // Menggunakan shared pref helper kita
+import 'screens/admin/pages/main_layout.dart'; 
+
+// IMPORT HALAMAN PENYERAP KAMU
+import 'screens/penyerap/main_penyerap.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +20,8 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
-  await PrefsHelper.setLoggedIn(true);
+  // Set default status login untuk keperluan testing lokal
+  await SharedPrefHelper.setLoginStatus(true);
 
   runApp(
     MultiProvider(
@@ -25,32 +30,40 @@ void main() async {
           create: (_) => AdminProvider()..refreshDashboard(),
         ),
       ],
-      child: const JunksLabAdminApp(),
+      child: const JunksLabApp(),
     ),
   );
 }
 
+// ATUR RUTE NAVIGASI (Mendukung Admin & Penyerap)
 final GoRouter _router = GoRouter(
-  initialLocation: '/',
-  routes: [GoRoute(path: '/', builder: (context, state) => const MainLayout())],
+  initialLocation: '/penyerap', // << UBAH KE '/' KALAU MAU TES ADMIN, UBAH KE '/penyerap' UNTUK TES KODINGAN KAMU
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const MainLayout(), // Halaman utama Admin
+    ),
+    GoRoute(
+      path: '/penyerap',
+      builder: (context, state) => const MainPenyerap(), // Halaman utama Penyerap (Yoga)
+    ),
+  ],
 );
 
-class JunksLabAdminApp extends StatelessWidget {
-  const JunksLabAdminApp({Key? key}) : super(key: key);
+class JunksLabApp extends StatelessWidget {
+  const JunksLabApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Bungkus dengan Consumer agar bisa mendengar perubahan isDarkMode
     return Consumer<AdminProvider>(
       builder: (context, provider, child) {
         return MaterialApp.router(
-          title: 'JunksLab Admin',
+          title: 'JunksLab App',
           debugShowCheckedModeBanner: false,
-
-          // Mengatur mode tema berdasarkan Shared Preferences
+          
+          // Tema Sinkron dengan Admin Provider
           themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
-          // TEMA TERANG
           theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.green,
@@ -58,14 +71,11 @@ class JunksLabAdminApp extends StatelessWidget {
             cardColor: Colors.white,
           ),
 
-          // TEMA GELAP
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.green,
-            scaffoldBackgroundColor: const Color(
-              0xFF121212,
-            ), // Background gelap
-            cardColor: const Color(0xFF1E1E1E), // Warna kotak gelap
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            cardColor: const Color(0xFF1E1E1E),
             dividerColor: Colors.grey[800],
           ),
 
