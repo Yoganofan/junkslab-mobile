@@ -1,89 +1,114 @@
 import 'package:flutter/material.dart';
+import 'qr_scanner_screen.dart';
 
-class DetailPenjemputan extends StatefulWidget {
+class DetailPenjemputan extends StatelessWidget {
   const DetailPenjemputan({Key? key}) : super(key: key);
-
-  @override
-  State<DetailPenjemputan> createState() => _DetailPenjemputanState();
-}
-
-class _DetailPenjemputanState extends State<DetailPenjemputan> {
-  bool _isConfirmed = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAF8),
       appBar: AppBar(
-        title: const Text('Detail Penjemputan', style: TextStyle(color: Colors.black)),
+        title: const Text('Detail Penjemputan', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Konten Detail (Bisa kamu kembangkan pakai Card seperti di UI)
-            const Text('Informasi Penyedia', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Text('Nama: Budi Santoso\nLokasi: Bojongsoang, Kab. Bandung'),
-            const Spacer(),
-            
-            // CUSTOM WIDGET & GESTURE (Swipe to Confirm)
-            _isConfirmed
-                ? Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text('Penjemputan Berhasil Terkonfirmasi!',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  )
-                : Dismissible(
-                    key: const Key('confirm_slider'),
-                    direction: DismissDirection.startToEnd,
-                    onDismissed: (direction) {
-                      setState(() {
-                        _isConfirmed = true;
-                      });
-                      // Di sini nanti bisa panggil fungsi update status ke SQLite
-                    },
-                    background: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.green[700],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: const Icon(Icons.check_circle, color: Colors.white, size: 32),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.arrow_forward_ios, color: Colors.green, size: 16),
-                          Icon(Icons.arrow_forward_ios, color: Colors.green, size: 16),
-                          SizedBox(width: 10),
-                          Text(
-                            'Geser ke kanan untuk Konfirmasi',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(20)),
+                    child: Text('Menunggu Diambil', style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold)),
                   ),
-          ],
-        ),
+                  const SizedBox(height: 20),
+                  const Text('Warung Makmur (Cabang Bojongsoang)', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.green.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      const Expanded(child: Text('Jl. Terusan Buah Batu No. 45, Kab. Bandung', style: TextStyle(color: Colors.grey, fontSize: 14))),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Divider(),
+                  ),
+                  const Text('Rincian Limbah', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildDetailRow('Jenis Limbah', 'Minyak Jelantah'),
+                  _buildDetailRow('Volume / Berat', '15 Liter'),
+                  
+                  // Logika biaya tebus limbah (Minus JP)
+                  _buildDetailRow('Biaya Penjemputan', '-150 JP', isMinus: true),
+                  
+                  _buildDetailRow('Catatan', 'Minyak sudah dimasukkan ke dalam jerigen hijau di depan warung.'),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                label: const Text('Scan QR Penyedia', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const QrScannerScreen(
+                        jenisLimbah: 'Minyak Jelantah',
+                        berat: 15,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String title, String value, {bool isMinus = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Expanded(
+            child: Text(
+              value, 
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: FontWeight.w600, 
+                fontSize: 14,
+                color: isMinus ? Colors.red.shade700 : Colors.black87
+              )
+            ),
+          ),
+        ],
       ),
     );
   }

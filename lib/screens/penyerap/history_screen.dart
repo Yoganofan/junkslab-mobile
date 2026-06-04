@@ -10,6 +10,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _historyList = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -17,51 +18,143 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _loadHistory();
   }
 
-  // Menarik data dari SQLite yang sudah diambil
+  // Fungsi penarik data yang kebal error saat di Web
+  // Fungsi penarik data super kebal (Pakai Batas Waktu / Timeout)
   Future<void> _loadHistory() async {
-    final data = await DatabaseHelper.instance.getAllLimbah();
-    setState(() {
-      _historyList = data;
-    });
+    setState(() => _isLoading = true);
+
+    try {
+      // Kita kasih waktu maksimal 2 detik. Kalau nyangkut, paksa lompat ke error!
+      final data = await DatabaseHelper.instance.getAllLimbah().timeout(
+        const Duration(seconds: 2),
+      );
+
+      if (mounted) {
+        setState(() {
+          _historyList = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Database nyangkut / Error: $e');
+      // Matikan loading paksa
+      if (mounted) {
+        setState(() {
+          _historyList = [];
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  // Fungsi hapus riwayat
   Future<void> _hapusRiwayat(int id) async {
-    await DatabaseHelper.instance.deleteLimbah(id);
-    _loadHistory(); // Refresh data setelah dihapus
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Riwayat berhasil dihapus')),
-    );
+    try {
+      await DatabaseHelper.instance.deleteLimbah(id);
+      _loadHistory();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Riwayat berhasil dihapus'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Abaikan Hapus Error SQLite Web: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAF8),
       appBar: AppBar(
-        title: const Text('Riwayat Penjemputan', style: TextStyle(color: Colors.black)),
+        title: const Text(
+          'Riwayat Penjemputan',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _historyList.isEmpty
-          ? const Center(child: Text('Belum ada riwayat penjemputan limbah.'))
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          : _historyList.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history_toggle_off,
+                    size: 80,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada riwayat penjemputan.',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               itemCount: _historyList.length,
               itemBuilder: (context, index) {
                 final item = _historyList[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.green,
-                      child: Icon(Icons.check, color: Colors.white),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
                     ),
-                    title: Text(item['nama_limbah'] ?? 'Limbah'),
-                    subtitle: Text('Berat: ${item['berat_kg']} kg\nStatus: Selesai'),
+                    leading: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green.shade600,
+                      ),
+                    ),
+                    title: Text(
+                      item['nama_limbah'] ?? 'Limbah',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Berat/Volume: ${item['berat_kg']}\nStatus: ${item['status']}',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red.shade400,
+                      ),
                       onPressed: () => _hapusRiwayat(item['id']),
                     ),
                   ),

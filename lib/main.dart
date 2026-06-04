@@ -2,25 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+
+// Tambahan import khusus untuk ngakalin Web & Deteksi Platform
+import 'package:flutter/foundation.dart'; // Untuk mendeteksi kIsWeb
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
-// FIX PATH: Menyesuaikan dengan struktur folder baru
 import 'screens/admin/admin_provider.dart';
-import 'helpers/shared_pref_helper.dart'; // Menggunakan shared pref helper kita
+import 'helpers/shared_pref_helper.dart';
 import 'screens/admin/pages/main_layout.dart';
-
-// IMPORT HALAMAN PENYERAP KAMU
 import 'screens/penyerap/main_penyerap.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isWindows || Platform.isLinux) {
+  // --- SAKLAR SQLITE OTOMATIS ---
+  if (kIsWeb) {
+    // Jika jalan di Google Chrome (Web), pakai mesin Web
+    databaseFactory = databaseFactoryFfiWeb;
+  } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // Jika jalan di Laptop/PC biasa, pakai mesin Desktop
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+  // (Jika di HP Android/iOS, dia otomatis pakai sqflite bawaan)
+  // ------------------------------
 
-  // Set default status login untuk keperluan testing lokal
   await SharedPrefHelper.setLoginStatus(true);
 
   runApp(
@@ -34,6 +42,8 @@ void main() async {
     ),
   );
 }
+
+// ... (sisa kodingan GoRouter dan JunksLabApp ke bawah biarkan sama persis seperti sebelumnya) ...
 
 // ATUR RUTE NAVIGASI (Mendukung Admin & Penyerap)
 final GoRouter _router = GoRouter(

@@ -39,12 +39,16 @@ class CustomLimbahCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Bagian ini yang diperbaiki agar tidak overflow
             children: [
-              Text(
-                namaPenyedia,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Expanded(
+                child: Text(
+                  namaPenyedia,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  overflow: TextOverflow.ellipsis, // Menambahkan titik-titik jika kepanjangan
+                ),
               ),
+              const SizedBox(width: 8), // Memberi jarak agar teks tidak menempel ke badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
