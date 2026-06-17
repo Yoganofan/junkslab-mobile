@@ -27,9 +27,10 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
   String _namaPenyedia = '';
   String _lokasiPenyedia = '';
 
-  // --- VARIABEL DUMMY UNTUK DATA DAMPAK ---
-  int _limbahTerserap = 300; // Basis awal sebelum penjemputan hari ini
-  double _co2Dicegah = 1.0;  // Basis awal CO2
+  // --- VARIABEL STATISTIK DAMPAK (PERSISTED) ---
+  int _limbahTerserap = 300;
+  double _co2Dicegah = 1.0;
+  int _totalTransaksi = 12;
 
   // --- ANIMATION CONTROLLERS ---
   AnimationController? _pulseController;
@@ -61,6 +62,9 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
   Future<void> _refreshData() async {
     final prefs = await SharedPreferences.getInstance();
     final points = await SharedPrefHelper.getJunksPoint();
+    final limbah = await SharedPrefHelper.getLimbahTerserap();
+    final transaksi = await SharedPrefHelper.getTotalTransaksi();
+    final co2Cents = await SharedPrefHelper.getCo2DicegahCents();
 
     setState(() {
       _saldoAsli = points;
@@ -72,19 +76,10 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
       _namaPenyedia = prefs.getString('tugas_penyedia') ?? 'Menunggu Data...';
       _lokasiPenyedia = prefs.getString('tugas_lokasi') ?? 'Menunggu lokasi...';
 
-      // Jika status selesai, potong saldo dan tambahkan dampak penjemputan hari ini
-      if (_statusTugas == 'selesai') {
-        _saldoTampil = _saldoAsli - 150;
-        
-        // Ambil angka dari string berat (misal '45 Liter/Kg' diambil 45)
-        int beratHariIni = int.tryParse(_beratLimbah.replaceAll(RegExp(r'[^0-9]'), '')) ?? 15;
-        _limbahTerserap = 300 + beratHariIni;
-        _co2Dicegah = 1.0 + (beratHariIni * 0.0044); // Simulasi hitungan dampak CO2
-      } else {
-        _saldoTampil = _saldoAsli;
-        _limbahTerserap = 300;
-        _co2Dicegah = 1.0;
-      }
+      // Read persisted stats directly — these are updated by QR scanner on completion
+      _limbahTerserap = limbah;
+      _totalTransaksi = transaksi;
+      _co2Dicegah = co2Cents / 100.0;
     });
   }
 
@@ -654,7 +649,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
             icon: Icons.handshake_rounded,
             iconGradientColors: [const Color(0xFF1565C0), const Color(0xFF42A5F5)],
             label: 'Transaksi Bulan Ini',
-            targetValue: 12,
+            targetValue: _totalTransaksi,
             unit: 'kali',
             bgAccent: const Color(0xFFE3F2FD),
           ),
@@ -677,7 +672,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
       width: 155,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: bgAccent, width: 1.5),
         boxShadow: [

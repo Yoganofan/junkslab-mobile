@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../helpers/shared_pref_helper.dart';
 import '../admin/admin_provider.dart';
 import '../auth/login_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilPenyerap extends StatefulWidget {
   const ProfilPenyerap({Key? key}) : super(key: key);
@@ -172,6 +173,9 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
                   _buildSectionTitle('Lainnya'),
                   const SizedBox(height: 10),
                   _buildMenuCard([
+                    _buildMenuItem(Icons.admin_panel_settings, 'Masuk Sebagai Admin', onTap: () {
+                      context.go('/');
+                    }),
                     _buildMenuItem(Icons.help_outline_rounded, 'Bantuan & FAQ'),
                     _buildMenuItem(Icons.info_outline_rounded, 'Tentang Aplikasi', subtitle: 'v1.0.0'),
                     _buildMenuItem(Icons.star_outline_rounded, 'Beri Rating'),

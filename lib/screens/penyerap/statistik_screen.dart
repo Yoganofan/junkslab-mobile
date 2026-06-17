@@ -1,78 +1,110 @@
 import 'package:flutter/material.dart';
+import '../../helpers/shared_pref_helper.dart';
 
-class StatistikScreen extends StatelessWidget {
+class StatistikScreen extends StatefulWidget {
   const StatistikScreen({Key? key}) : super(key: key);
+
+  @override
+  State<StatistikScreen> createState() => _StatistikScreenState();
+}
+
+class _StatistikScreenState extends State<StatistikScreen> {
+  int _limbahTerserap = 300;
+  int _totalTransaksi = 12;
+  double _co2Dicegah = 1.0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final limbah = await SharedPrefHelper.getLimbahTerserap();
+    final transaksi = await SharedPrefHelper.getTotalTransaksi();
+    final co2Cents = await SharedPrefHelper.getCo2DicegahCents();
+    setState(() {
+      _limbahTerserap = limbah;
+      _totalTransaksi = transaksi;
+      _co2Dicegah = co2Cents / 100.0;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: Theme.of(context).iconTheme,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1A1A1A), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Statistik Dampak',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- HERO IMPACT SUMMARY ---
-            _buildImpactHero(),
-            const SizedBox(height: 24),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F7A44)))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- HERO IMPACT SUMMARY ---
+                  _buildImpactHero(),
+                  const SizedBox(height: 24),
 
-            // --- MONTHLY CHART ---
-            _buildSectionLabel('Penjemputan per Minggu', Icons.bar_chart_rounded),
-            const SizedBox(height: 14),
-            _buildWeeklyChart(),
-            const SizedBox(height: 28),
+                  // --- MONTHLY CHART ---
+                  _buildSectionLabel('Penjemputan per Minggu', Icons.bar_chart_rounded),
+                  const SizedBox(height: 14),
+                  _buildWeeklyChart(),
+                  const SizedBox(height: 28),
 
-            // --- ECO GOALS ---
-            _buildSectionLabel('Target Bulan Ini', Icons.flag_rounded),
-            const SizedBox(height: 14),
-            _buildEcoGoal('Limbah Terserap', 300, 500, 'kg', const Color(0xFF0F7A44)),
-            const SizedBox(height: 12),
-            _buildEcoGoal('Penjemputan', 12, 20, 'kali', const Color(0xFF1565C0)),
-            const SizedBox(height: 12),
-            _buildEcoGoal('CO2 Dicegah', 10, 15, 'ton', const Color(0xFF7B1FA2)),
-            const SizedBox(height: 28),
+                  // --- ECO GOALS ---
+                  _buildSectionLabel('Target Bulan Ini', Icons.flag_rounded),
+                  const SizedBox(height: 14),
+                  _buildEcoGoal('Limbah Terserap', _limbahTerserap, 500, 'kg', const Color(0xFF0F7A44)),
+                  const SizedBox(height: 12),
+                  _buildEcoGoal('Penjemputan', _totalTransaksi, 20, 'kali', const Color(0xFF1565C0)),
+                  const SizedBox(height: 12),
+                  _buildEcoGoal('CO2 Dicegah', (_co2Dicegah * 10).round(), 15, 'ton', const Color(0xFF7B1FA2)),
+                  const SizedBox(height: 28),
 
-            // --- TIPS SECTION ---
-            _buildSectionLabel('Tips Ekonomi Sirkular', Icons.lightbulb_rounded),
-            const SizedBox(height: 14),
-            _buildTipsCard(
-              'Minyak jelantah bisa diolah menjadi biodiesel, sabun, dan lilin. '
-              'Dengan mendaur ulang 1 liter minyak jelantah, kamu mencegah '
-              'pencemaran 1.000 liter air bersih.',
-              Icons.water_drop_rounded,
-              const Color(0xFF1565C0),
-              const Color(0xFFE3F2FD),
+                  // --- TIPS SECTION ---
+                  _buildSectionLabel('Tips Ekonomi Sirkular', Icons.lightbulb_rounded),
+                  const SizedBox(height: 14),
+                  _buildTipsCard(
+                    'Minyak jelantah bisa diolah menjadi biodiesel, sabun, dan lilin. '
+                    'Dengan mendaur ulang 1 liter minyak jelantah, kamu mencegah '
+                    'pencemaran 1.000 liter air bersih.',
+                    Icons.water_drop_rounded,
+                    const Color(0xFF1565C0),
+                    const Color(0xFFE3F2FD),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTipsCard(
+                    'Plastik bekas dapat didaur ulang menjadi bahan baku industri, '
+                    'seperti paving block, pot tanaman, dan serat tekstil. Setiap '
+                    '1kg plastik yang didaur ulang mengurangi emisi 1.5kg CO2.',
+                    Icons.recycling_rounded,
+                    const Color(0xFF0F7A44),
+                    const Color(0xFFE8F5E9),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildTipsCard(
-              'Plastik bekas dapat didaur ulang menjadi bahan baku industri, '
-              'seperti paving block, pot tanaman, dan serat tekstil. Setiap '
-              '1kg plastik yang didaur ulang mengurangi emisi 1.5kg CO2.',
-              Icons.recycling_rounded,
-              const Color(0xFF0F7A44),
-              const Color(0xFFE8F5E9),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -83,10 +115,10 @@ class StatistikScreen extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             letterSpacing: -0.3,
           ),
         ),
@@ -95,6 +127,7 @@ class StatistikScreen extends StatelessWidget {
   }
 
   Widget _buildImpactHero() {
+    final co2Display = _co2Dicegah.toStringAsFixed(1);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -136,11 +169,11 @@ class StatistikScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Row(
             children: [
-              _buildHeroStat('300', 'kg', 'Limbah\nTerserap'),
+              _buildHeroStat('$_limbahTerserap', 'kg', 'Limbah\nTerserap'),
               _buildHeroDivider(),
-              _buildHeroStat('1.0', 'ton', 'CO2\nDicegah'),
+              _buildHeroStat(co2Display, 'ton', 'CO2\nDicegah'),
               _buildHeroDivider(),
-              _buildHeroStat('12', 'kali', 'Total\nTransaksi'),
+              _buildHeroStat('$_totalTransaksi', 'kali', 'Total\nTransaksi'),
             ],
           ),
         ],
@@ -211,7 +244,7 @@ class StatistikScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -226,12 +259,12 @@ class StatistikScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Juni 2026',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
-                  color: Color(0xFF1A1A1A),
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                 ),
               ),
               Container(
@@ -240,9 +273,9 @@ class StatistikScreen extends StatelessWidget {
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'Total: 235 kg',
-                  style: TextStyle(
+                child: Text(
+                  'Total: $_limbahTerserap kg',
+                  style: const TextStyle(
                     color: Color(0xFF0F7A44),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -266,10 +299,10 @@ class StatistikScreen extends StatelessWidget {
                       children: [
                         Text(
                           '${d.value}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
+                            color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -316,11 +349,11 @@ class StatistikScreen extends StatelessWidget {
   }
 
   Widget _buildEcoGoal(String label, int current, int target, String unit, Color color) {
-    final ratio = current / target;
+    final ratio = (current / target).clamp(0.0, 1.0);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -338,10 +371,10 @@ class StatistikScreen extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
-                  color: Color(0xFF1A1A1A),
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                 ),
               ),
               Text(

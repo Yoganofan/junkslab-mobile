@@ -9,17 +9,34 @@ class DetailPenjemputan extends StatefulWidget {
   State<DetailPenjemputan> createState() => _DetailPenjemputanState();
 }
 
-class _DetailPenjemputanState extends State<DetailPenjemputan> {
+class _DetailPenjemputanState extends State<DetailPenjemputan>
+    with SingleTickerProviderStateMixin {
   String _namaPenyedia = 'Memuat...';
   String _namaLimbah = 'Memuat...';
   String _beratLimbah = 'Memuat...';
   String _lokasi = 'Memuat...';
   int _hargaJp = 0;
 
+  late AnimationController _breatheController;
+  late Animation<double> _breatheAnimation;
+
   @override
   void initState() {
     super.initState();
+    _breatheController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _breatheAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _breatheController, curve: Curves.easeInOut),
+    );
     _loadDetailData();
+  }
+
+  @override
+  void dispose() {
+    _breatheController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDetailData() async {
@@ -37,107 +54,119 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
   void _tampilkanPeringatanScan(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Location icon with gradient circle
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0F7A44), Color(0xFF22C55E)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF22C55E).withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.location_on_rounded, size: 36, color: Colors.white),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Sudah di Lokasi?',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Pastikan Anda telah bertemu dengan penyedia limbah dan berada di lokasi penjemputan sebelum melakukan scan QR Code.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                child: Container(
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Location icon with gradient circle
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0F7A44), Color(0xFF14A05A)],
+                      colors: [Color(0xFF0F7A44), Color(0xFF22C55E)],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0F7A44).withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
+                  child: const Icon(Icons.location_on_rounded, size: 36, color: Colors.white),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Sudah di Lokasi?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Pastikan Anda telah bertemu dengan penyedia limbah dan berada di lokasi penjemputan sebelum melakukan scan QR Code.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: Container(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QrScannerScreen(
-                              jenisLimbah: _namaLimbah,
-                              berat: int.tryParse(_beratLimbah.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0F7A44), Color(0xFF14A05A)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F7A44).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QrScannerScreen(
+                                jenisLimbah: _namaLimbah,
+                                berat: int.tryParse(_beratLimbah.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+                              ),
                             ),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 20),
+                              SizedBox(width: 10),
+                              Text(
+                                'Ya, Buka Scanner',
+                                style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 20),
-                            SizedBox(width: 10),
-                            Text(
-                              'Ya, Buka Scanner',
-                              style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700),
-                            ),
-                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -146,6 +175,8 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -176,7 +207,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
             _buildStepper(),
             const SizedBox(height: 24),
 
-            // --- PROVIDER INFO CARD ---
+            // --- PROVIDER INFO CARD (UPGRADED) ---
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -193,24 +224,87 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header row: avatar + info
+                  Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF0F7A44).withValues(alpha: 0.15),
+                              const Color(0xFF22C55E).withValues(alpha: 0.1),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: const Color(0xFF0F7A44).withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.person_rounded, color: Color(0xFF0F7A44), size: 26),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _namaPenyedia,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_rounded, color: Colors.grey.shade500, size: 14),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    '$_lokasi, Kab. Bandung',
+                                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   // Status chip
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
+                      color: isDark ? const Color(0xFF3D2E14) : const Color(0xFFFFF7ED),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: const Color(0xFFFDBA74)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.orange.shade600,
-                          ),
+                        // Breathing dot
+                        AnimatedBuilder(
+                          animation: _breatheAnimation,
+                          builder: (context, child) {
+                            return Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.orange.shade600.withValues(alpha: _breatheAnimation.value),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -224,67 +318,56 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    _namaPenyedia,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_rounded, color: Color(0xFF0F7A44), size: 18),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          '$_lokasi, Kab. Bandung',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
-            // --- DETAIL INFO ---
+            // --- DETAIL INFO SECTION HEADER ---
             Row(
               children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF0F7A44)),
+                const Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFF0F7A44)),
                 const SizedBox(width: 8),
                 Text(
                   'Rincian Informasi',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A)),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildDetailRow(Icons.delete_outline_rounded, 'Jenis Limbah', _namaLimbah, const Color(0xFF0F7A44)),
-                  Divider(height: 28, color: Colors.grey.shade100),
-                  _buildDetailRow(Icons.scale_rounded, 'Volume / Berat', _beratLimbah, const Color(0xFF1565C0)),
-                  Divider(height: 28, color: Colors.grey.shade100),
-                  _buildDetailRow(Icons.monetization_on_outlined, 'Biaya Penjemputan', '-$_hargaJp JP', const Color(0xFFEF4444)),
-                ],
-              ),
+
+            // --- DETAIL INFO CARDS (UPGRADED — individual cards) ---
+            _buildInfoCard(
+              icon: Icons.delete_outline_rounded,
+              color: const Color(0xFF0F7A44),
+              title: 'Jenis Limbah',
+              value: _namaLimbah,
+            ),
+            const SizedBox(height: 10),
+            _buildInfoCard(
+              icon: Icons.scale_rounded,
+              color: const Color(0xFF1565C0),
+              title: 'Volume / Berat',
+              value: _beratLimbah,
+            ),
+            const SizedBox(height: 10),
+            _buildInfoCard(
+              icon: Icons.monetization_on_outlined,
+              color: const Color(0xFFEF4444),
+              title: 'Biaya Penjemputan',
+              value: '-$_hargaJp JP',
+              isNegative: true,
+            ),
+            const SizedBox(height: 10),
+            _buildInfoCard(
+              icon: Icons.schedule_rounded,
+              color: const Color(0xFF7B1FA2),
+              title: 'Estimasi Waktu',
+              value: '15-30 menit',
             ),
             const SizedBox(height: 20),
 
@@ -292,7 +375,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFE3F2FD),
+                color: isDark ? const Color(0xFF1A2332) : const Color(0xFFE3F2FD),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFF1565C0).withValues(alpha: 0.15)),
               ),
@@ -374,6 +457,75 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
     );
   }
 
+  // --- UPGRADED: Individual info card with icon accent ---
+  Widget _buildInfoCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String value,
+    bool isNegative = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: isNegative
+                        ? const Color(0xFFEF4444)
+                        : Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: Colors.grey.shade300,
+            size: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- STEPPER VISUAL ---
   Widget _buildStepper() {
     return Container(
@@ -447,37 +599,6 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
           color: isCompleted ? const Color(0xFF22C55E) : Colors.grey.shade200,
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String title, String value, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 18),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Text(
-            title,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: title.contains('Biaya') ? const Color(0xFFEF4444) : const Color(0xFF1A1A1A),
-          ),
-        ),
-      ],
     );
   }
 }

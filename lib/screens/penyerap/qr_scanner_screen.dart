@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../helpers/database_helper.dart';
+import '../../helpers/shared_pref_helper.dart';
 import 'success_screen.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -59,19 +60,23 @@ class _QrScannerScreenState extends State<QrScannerScreen>
         'status': 'Selesai (Scanned)',
       });
 
-      // --- TAMBAHAN UPDATE STATUS KE DASHBOARD ---
+      // --- UPDATE STATUS KE DASHBOARD ---
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('status_tugas', 'selesai');
       
-      // --- UPDATE JUNKSPOINT ---
+      // --- DEDUCT JUNKSPOINT SECARA AKURAT ---
       int currentPoints = prefs.getInt('junks_point') ?? 12000;
-      int hargaJp = prefs.getInt('tugas_harga_jp') ?? 0;
-      await prefs.setInt('junks_point', currentPoints - hargaJp);
-      // -------------------------------------------
+      int hargaJp = prefs.getInt('tugas_harga_jp') ?? (widget.berat * 200);
+      int newPoints = (currentPoints - hargaJp).clamp(0, 999999);
+      await prefs.setInt('junks_point', newPoints);
+
+      // --- UPDATE STATISTIK DAMPAK (PERSISTED) ---
+      await SharedPrefHelper.addCompletedPickup(widget.berat);
     } catch (e) {
       // Kalau error atau beku, cuekin aja biar aplikasinya tetep jalan pas demo!
       debugPrint('Abaikan error DB saat scan: $e');
     }
+
 
     if (!mounted) return;
 
