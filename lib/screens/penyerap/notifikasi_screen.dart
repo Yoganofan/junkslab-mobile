@@ -63,19 +63,20 @@ class NotifikasiScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: Theme.of(context).iconTheme,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1A1A1A), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Notifikasi',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
@@ -110,17 +111,17 @@ class NotifikasiScreen extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final notif = notifications[index];
-          return _buildNotifCard(notif);
+          return _buildNotifCard(notif, context);
         },
       ),
     );
   }
 
-  Widget _buildNotifCard(_NotifItem notif) {
+  Widget _buildNotifCard(_NotifItem notif, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: notif.isUnread ? Colors.white : Colors.white.withValues(alpha: 0.7),
+        color: notif.isUnread ? Theme.of(context).cardColor : Theme.of(context).cardColor.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: notif.isUnread
@@ -165,7 +166,7 @@ class NotifikasiScreen extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: notif.isUnread ? FontWeight.w700 : FontWeight.w600,
                           fontSize: 14,
-                          color: const Color(0xFF1A1A1A),
+                          color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                           letterSpacing: -0.2,
                         ),
                       ),

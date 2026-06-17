@@ -62,6 +62,11 @@ class _QrScannerScreenState extends State<QrScannerScreen>
       // --- TAMBAHAN UPDATE STATUS KE DASHBOARD ---
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('status_tugas', 'selesai');
+      
+      // --- UPDATE JUNKSPOINT ---
+      int currentPoints = prefs.getInt('junks_point') ?? 12000;
+      int hargaJp = prefs.getInt('tugas_harga_jp') ?? 0;
+      await prefs.setInt('junks_point', currentPoints - hargaJp);
       // -------------------------------------------
     } catch (e) {
       // Kalau error atau beku, cuekin aja biar aplikasinya tetep jalan pas demo!

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SuccessScreen extends StatefulWidget {
   final String hasilScan;
@@ -14,10 +15,12 @@ class _SuccessScreenState extends State<SuccessScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  int _hargaJp = 0;
 
   @override
   void initState() {
     super.initState();
+    _loadHarga();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -34,6 +37,15 @@ class _SuccessScreenState extends State<SuccessScreen>
     _controller.forward();
   }
 
+  Future<void> _loadHarga() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _hargaJp = prefs.getInt('tugas_harga_jp') ?? 0;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -43,7 +55,7 @@ class _SuccessScreenState extends State<SuccessScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -110,12 +122,12 @@ class _SuccessScreenState extends State<SuccessScreen>
                 opacity: _fadeAnimation,
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Penjemputan Berhasil!',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1A1A1A),
+                        color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -132,12 +144,12 @@ class _SuccessScreenState extends State<SuccessScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 12,
+                            blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -173,10 +185,10 @@ class _SuccessScreenState extends State<SuccessScreen>
                             child: const Icon(Icons.monetization_on_rounded, color: Color(0xFFEF4444), size: 20),
                           ),
                           const SizedBox(width: 14),
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Poin Ditukarkan',
                                 style: TextStyle(
                                   color: Color(0xFFEF4444),
@@ -185,8 +197,8 @@ class _SuccessScreenState extends State<SuccessScreen>
                                 ),
                               ),
                               Text(
-                                '-150 JunksPoint',
-                                style: TextStyle(
+                                '-$_hargaJp JunksPoint',
+                                style: const TextStyle(
                                   color: Color(0xFFDC2626),
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -285,10 +297,10 @@ class _SuccessScreenState extends State<SuccessScreen>
         Flexible(
           child: Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 14,
-              color: Color(0xFF1A1A1A),
+              color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
             ),
             overflow: TextOverflow.ellipsis,
           ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../helpers/shared_pref_helper.dart';
+import '../admin/admin_provider.dart';
 import '../auth/login_screen.dart';
 
 class ProfilPenyerap extends StatefulWidget {
@@ -124,7 +126,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -157,7 +159,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
                       'Mode Gelap',
                       _isDarkMode,
                       (value) async {
-                        await SharedPrefHelper.setThemeMode(value);
+                        await context.read<AdminProvider>().toggleTheme(value);
                         setState(() => _isDarkMode = value);
                       },
                     ),
@@ -267,7 +269,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
                         content: const Text('Fitur ganti foto segera hadir!'),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        backgroundColor: const Color(0xFF333333),
+                        backgroundColor: Theme.of(context).colorScheme.onSurface,
                       ),
                     );
                   },
@@ -275,7 +277,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -346,7 +348,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
   Widget _buildMenuCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -396,7 +398,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF4F7F4),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: const Color(0xFF0F7A44), size: 20),
@@ -405,10 +407,10 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Color(0xFF1A1A1A),
+                    color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
@@ -438,7 +440,7 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F7F4),
+              color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: const Color(0xFF0F7A44), size: 20),
@@ -447,10 +449,10 @@ class _ProfilPenyerapState extends State<ProfilPenyerap> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Color(0xFF1A1A1A),
+                color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
               ),
             ),
           ),

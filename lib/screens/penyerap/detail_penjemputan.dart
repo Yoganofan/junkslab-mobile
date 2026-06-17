@@ -14,6 +14,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
   String _namaLimbah = 'Memuat...';
   String _beratLimbah = 'Memuat...';
   String _lokasi = 'Memuat...';
+  int _hargaJp = 0;
 
   @override
   void initState() {
@@ -29,6 +30,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
       _namaLimbah = prefs.getString('tugas_nama') ?? '-';
       _beratLimbah = prefs.getString('tugas_berat') ?? '-';
       _lokasi = prefs.getString('tugas_lokasi') ?? '-';
+      _hargaJp = prefs.getInt('tugas_harga_jp') ?? 0;
     });
   }
 
@@ -74,9 +76,9 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
                 child: const Icon(Icons.location_on_rounded, size: 36, color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Sudah di Lokasi?',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A)),
               ),
               const SizedBox(height: 8),
               Text(
@@ -145,19 +147,20 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: Theme.of(context).iconTheme,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1A1A1A), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Detail Penjemputan',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
@@ -177,7 +180,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -224,10 +227,10 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
                   const SizedBox(height: 14),
                   Text(
                     _namaPenyedia,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -253,9 +256,9 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
               children: [
                 const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF0F7A44)),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Rincian Informasi',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A)),
                 ),
               ],
             ),
@@ -263,7 +266,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
@@ -279,7 +282,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
                   Divider(height: 28, color: Colors.grey.shade100),
                   _buildDetailRow(Icons.scale_rounded, 'Volume / Berat', _beratLimbah, const Color(0xFF1565C0)),
                   Divider(height: 28, color: Colors.grey.shade100),
-                  _buildDetailRow(Icons.monetization_on_outlined, 'Biaya Penjemputan', '-150 JP', const Color(0xFFEF4444)),
+                  _buildDetailRow(Icons.monetization_on_outlined, 'Biaya Penjemputan', '-$_hargaJp JP', const Color(0xFFEF4444)),
                 ],
               ),
             ),
@@ -318,7 +321,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -376,7 +379,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(

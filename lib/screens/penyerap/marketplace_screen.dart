@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../helpers/database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../helpers/shared_pref_helper.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -53,9 +54,28 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   Future<void> _ambilLimbah(Map<String, dynamic> limbah) async {
     final prefs = await SharedPreferences.getInstance();
+    int beratKg = limbah['berat_kg'] ?? 0;
+    int hargaJp = beratKg * 200;
+
+    int currentPoints = await SharedPrefHelper.getJunksPoint();
+
+    if (currentPoints < hargaJp) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('JunksPoint tidak mencukupi! Butuh $hargaJp JP.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
     await prefs.setString('status_tugas', 'aktif');
     await prefs.setString('tugas_nama', limbah['nama_limbah']);
     await prefs.setString('tugas_berat', '${limbah['berat_kg']} Liter/Kg');
+    await prefs.setInt('tugas_harga_jp', hargaJp);
 
     await prefs.setString('tugas_penyedia', 'Penyedia ${limbah['id']}');
     await prefs.setString(
@@ -119,15 +139,16 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     final filtered = _filteredList;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
+        iconTheme: Theme.of(context).iconTheme,
+        title: Text(
           'Marketplace Limbah',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
@@ -155,7 +176,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
@@ -196,16 +217,16 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF0F7A44) : Colors.white,
+                        color: isSelected ? const Color(0xFF0F7A44) : Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF0F7A44) : Colors.grey.shade300,
+                          color: isSelected ? const Color(0xFF0F7A44) : Theme.of(context).dividerColor,
                         ),
                       ),
                       child: Text(
                         filter,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.grey.shade600,
+                          color: isSelected ? Colors.white : (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.grey.shade600),
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -302,7 +323,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -335,10 +356,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   children: [
                     Text(
                       'Penyedia $id',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        color: Color(0xFF1A1A1A),
+                        color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -375,7 +396,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAF8),
+              color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -441,6 +462,31 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Harga JP Display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.monetization_on_rounded, color: Color(0xFFEF4444), size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Harga: ${berat * 200} JP',
+                  style: const TextStyle(
+                    color: Color(0xFFDC2626),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

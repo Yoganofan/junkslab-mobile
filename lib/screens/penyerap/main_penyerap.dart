@@ -45,7 +45,7 @@ class _MainPenyerapState extends State<MainPenyerap> {
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -64,7 +64,7 @@ class _MainPenyerapState extends State<MainPenyerap> {
           unselectedItemColor: const Color(0xFFAAAAAA),
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           elevation: 0,
           selectedFontSize: 11,
           unselectedFontSize: 11,

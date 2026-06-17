@@ -49,4 +49,17 @@ class SharedPrefHelper {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(keyThemeMode) ?? false; 
   }
+
+  // 5. Saldo JunksPoint
+  static const String keyJunksPoint = "junks_point";
+  
+  static Future<void> setJunksPoint(int points) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(keyJunksPoint, points);
+  }
+
+  static Future<int> getJunksPoint() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(keyJunksPoint) ?? 12000;
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../helpers/shared_pref_helper.dart';
 
 import 'detail_penjemputan.dart';
 import 'notifikasi_screen.dart';
@@ -31,8 +32,8 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
   double _co2Dicegah = 1.0;  // Basis awal CO2
 
   // --- ANIMATION CONTROLLERS ---
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  AnimationController? _pulseController;
+  Animation<double>? _pulseAnimation;
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
     )..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _pulseController!, curve: Curves.easeInOut),
     );
 
     _refreshData();
@@ -53,38 +54,38 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _pulseController?.dispose();
     super.dispose();
   }
 
   Future<void> _refreshData() async {
     final prefs = await SharedPreferences.getInstance();
-    String status = prefs.getString('status_tugas') ?? 'kosong';
+    final points = await SharedPrefHelper.getJunksPoint();
 
-    if (mounted) {
-      setState(() {
-        _statusTugas = status;
-        _namaLimbah = prefs.getString('tugas_nama') ?? 'Minyak Jelantah';
-        _beratLimbah = prefs.getString('tugas_berat') ?? '15 Liter';
+    setState(() {
+      _saldoAsli = points;
+      _saldoTampil = points;
+      _statusTugas = prefs.getString('status_tugas') ?? 'kosong';
+      _namaLimbah = prefs.getString('tugas_nama') ?? 'Minyak Jelantah';
+      _beratLimbah = prefs.getString('tugas_berat') ?? '15 Liter';
+      
+      _namaPenyedia = prefs.getString('tugas_penyedia') ?? 'Menunggu Data...';
+      _lokasiPenyedia = prefs.getString('tugas_lokasi') ?? 'Menunggu lokasi...';
+
+      // Jika status selesai, potong saldo dan tambahkan dampak penjemputan hari ini
+      if (_statusTugas == 'selesai') {
+        _saldoTampil = _saldoAsli - 150;
         
-        _namaPenyedia = prefs.getString('tugas_penyedia') ?? 'Menunggu Data...';
-        _lokasiPenyedia = prefs.getString('tugas_lokasi') ?? 'Menunggu lokasi...';
-
-        // Jika status selesai, potong saldo dan tambahkan dampak penjemputan hari ini
-        if (_statusTugas == 'selesai') {
-          _saldoTampil = _saldoAsli - 150;
-          
-          // Ambil angka dari string berat (misal '45 Liter/Kg' diambil 45)
-          int beratHariIni = int.tryParse(_beratLimbah.replaceAll(RegExp(r'[^0-9]'), '')) ?? 15;
-          _limbahTerserap = 300 + beratHariIni;
-          _co2Dicegah = 1.0 + (beratHariIni * 0.0044); // Simulasi hitungan dampak CO2
-        } else {
-          _saldoTampil = _saldoAsli;
-          _limbahTerserap = 300;
-          _co2Dicegah = 1.0;
-        }
-      });
-    }
+        // Ambil angka dari string berat (misal '45 Liter/Kg' diambil 45)
+        int beratHariIni = int.tryParse(_beratLimbah.replaceAll(RegExp(r'[^0-9]'), '')) ?? 15;
+        _limbahTerserap = 300 + beratHariIni;
+        _co2Dicegah = 1.0 + (beratHariIni * 0.0044); // Simulasi hitungan dampak CO2
+      } else {
+        _saldoTampil = _saldoAsli;
+        _limbahTerserap = 300;
+        _co2Dicegah = 1.0;
+      }
+    });
   }
 
   String _getGreeting() {
@@ -100,7 +101,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
     final numberFormat = NumberFormat.decimalPattern('id');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
@@ -108,7 +109,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
         backgroundColor: Colors.white,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -145,10 +146,12 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
   // ============================================================
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
-      iconTheme: const IconThemeData(color: Colors.black87),
+      toolbarHeight: 70,
+      titleSpacing: 20,
+      iconTheme: Theme.of(context).iconTheme,
       title: Row(
         children: [
           // Long-press avatar to reset demo data
@@ -216,12 +219,12 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                 ),
               ),
               const SizedBox(height: 2),
-              const Text(
+              Text(
                 'Yoga Nofan',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A),
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                   letterSpacing: -0.3,
                 ),
               ),
@@ -237,9 +240,9 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFF333333),
+                icon: Icon(
+                  Icons.notifications_none_rounded,
+                  color: Theme.of(context).iconTheme.color ?? const Color(0xFF1A1A1A),
                   size: 26,
                 ),
                 onPressed: () {
@@ -428,24 +431,30 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.swap_horiz_rounded,
-                            color: Colors.white.withValues(alpha: 0.6),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Setara Rp ${numberFormat.format(_saldoTampil * 10)}',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.swap_horiz_rounded,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Setara Rp ${numberFormat.format(_saldoTampil * 10)}',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.75),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 10),
                       // Glassmorphism Tarik Saldo button
                       Container(
                         decoration: BoxDecoration(
@@ -598,13 +607,16 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
       children: [
         Icon(icon, size: 18, color: const Color(0xFF0F7A44)),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
-            letterSpacing: -0.3,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1A1A),
+              letterSpacing: -0.3,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -718,10 +730,10 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
               }
               return Text(
                 '$displayValue $unit',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                   letterSpacing: -0.5,
                 ),
               );
@@ -742,17 +754,21 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
+        Expanded(
+          child: Row(
+            children: [
             const Icon(Icons.local_shipping_rounded, size: 18, color: Color(0xFF0F7A44)),
             const SizedBox(width: 8),
-            const Text(
-              'Tugas Penjemputan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1A1A),
-                letterSpacing: -0.3,
+            Flexible(
+              child: Text(
+                'Tugas Penjemputan',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
+                  letterSpacing: -0.3,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -779,6 +795,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
               ),
             ),
           ],
+        ),
         ),
         TextButton(
           onPressed: () {},
@@ -997,10 +1014,10 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                             Expanded(
                               child: Text(
                                 _namaPenyedia,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
-                                  color: Color(0xFF1A1A1A),
+                                  color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1021,7 +1038,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                                 children: [
                                   // Pulsing dot
                                   AnimatedBuilder(
-                                    animation: _pulseAnimation,
+                                    animation: _pulseAnimation!,
                                     builder: (context, child) {
                                       return Container(
                                         width: 7,
@@ -1029,7 +1046,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.orange.shade600.withValues(
-                                            alpha: _pulseAnimation.value,
+                                            alpha: _pulseAnimation!.value,
                                           ),
                                         ),
                                       );
@@ -1230,6 +1247,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                   Container(
                     width: 56,
                     height: 56,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
@@ -1252,11 +1270,12 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Semua tugas hari ini selesai!',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A1A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                       fontSize: 16,
                       letterSpacing: -0.3,
                     ),
@@ -1264,6 +1283,7 @@ class _DashboardPenyerapState extends State<DashboardPenyerap>
                   const SizedBox(height: 6),
                   Text(
                     'Data telah diverifikasi dan masuk ke riwayat.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF0F7A44).withValues(alpha: 0.8),
                       fontSize: 13,

@@ -21,21 +21,23 @@ class DetailRiwayatScreen extends StatelessWidget {
 
     // Simulate CO2 impact
     final co2Impact = (beratKg * 0.0044).toStringAsFixed(2);
+    final hargaJp = (beratKg as num).toInt() * 200;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: Theme.of(context).iconTheme,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1A1A1A), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Detail Riwayat',
+        title: Text(
+          'Detail Penjemputan',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
@@ -52,7 +54,7 @@ class DetailRiwayatScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -85,10 +87,10 @@ class DetailRiwayatScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   Text(
                     namaLimbah,
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+                      color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -121,13 +123,13 @@ class DetailRiwayatScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // --- DETAIL INFO ---
-            _buildSectionLabel('Informasi Penjemputan', Icons.info_outline_rounded),
+            _buildSectionLabel(context, 'Informasi Penjemputan', Icons.info_outline_rounded),
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
@@ -139,20 +141,20 @@ class DetailRiwayatScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.delete_outline_rounded, 'Jenis Limbah', namaLimbah, const Color(0xFF0F7A44)),
+                  _buildInfoRow(context, Icons.delete_outline_rounded, 'Jenis Limbah', namaLimbah, const Color(0xFF0F7A44)),
                   _buildDivider(),
-                  _buildInfoRow(Icons.scale_rounded, 'Volume / Berat', '$beratKg kg', const Color(0xFF1565C0)),
+                  _buildInfoRow(context, Icons.scale_rounded, 'Volume / Berat', '$beratKg kg', const Color(0xFF1565C0)),
                   _buildDivider(),
-                  _buildInfoRow(Icons.calendar_today_rounded, 'Tanggal', formattedDate, const Color(0xFFE65100)),
+                  _buildInfoRow(context, Icons.calendar_today_rounded, 'Tanggal', formattedDate, const Color(0xFFE65100)),
                   _buildDivider(),
-                  _buildInfoRow(Icons.monetization_on_outlined, 'Biaya Penjemputan', '-150 JP', const Color(0xFFEF4444)),
+                  _buildInfoRow(context, Icons.monetization_on_outlined, 'Biaya Penjemputan', '-$hargaJp JP', const Color(0xFFEF4444)),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
             // --- ENVIRONMENTAL IMPACT ---
-            _buildSectionLabel('Dampak Lingkungan', Icons.eco_rounded),
+            _buildSectionLabel(context, 'Dampak Lingkungan', Icons.eco_rounded),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -183,17 +185,17 @@ class DetailRiwayatScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionLabel(String title, IconData icon) {
+  Widget _buildSectionLabel(BuildContext context, String title, IconData icon) {
     return Row(
       children: [
         Icon(icon, size: 18, color: const Color(0xFF0F7A44)),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
             letterSpacing: -0.3,
           ),
         ),
@@ -201,7 +203,7 @@ class DetailRiwayatScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -229,9 +231,9 @@ class DetailRiwayatScreen extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontWeight: FontWeight.w700,
               fontSize: 14,
-              color: label.contains('Biaya') ? const Color(0xFFEF4444) : const Color(0xFF1A1A1A),
+              color: label.contains('Biaya') ? const Color(0xFFEF4444) : (Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A)),
+              fontWeight: label.contains('Biaya') ? FontWeight.w800 : FontWeight.w700,
             ),
           ),
         ],

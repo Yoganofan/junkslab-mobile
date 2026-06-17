@@ -111,15 +111,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F4),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F7F4),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
+        iconTheme: Theme.of(context).iconTheme,
+        title: Text(
           'Riwayat Penjemputan',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A1A1A),
             fontWeight: FontWeight.w700,
             fontSize: 18,
             letterSpacing: -0.3,
@@ -180,7 +181,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -289,7 +290,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -317,10 +318,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         children: [
                           Text(
                             nama,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: Color(0xFF1A1A1A),
+                              color: Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A1A1A),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -381,7 +382,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             'Belum ada riwayat penjemputan',
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.grey.shade700,
               fontSize: 16,
             ),
           ),
