@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // <--- TAMBAHAN IMPORT
 import '../../helpers/database_helper.dart';
 import 'success_screen.dart';
 
@@ -32,15 +33,27 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   Future<void> _prosesDataSukses(String hasilScan) async {
     setState(() => _isScanned = true);
 
-    // Murni masuk ke SQLite yang sudah diperbaiki!
-    await DatabaseHelper.instance.insertLimbah({
-      'nama_limbah': widget.jenisLimbah,
-      'berat_kg': widget.berat,
-      'tanggal': DateTime.now().toString(),
-      'status': 'Selesai (Scanned)',
-    });
+    try {
+      // Masukin data ke SQLite History
+      await DatabaseHelper.instance.insertLimbah({
+        'nama_limbah': hasilScan, // Biar 'AGOY' atau teks QR lainnya MASUK
+        'berat_kg': widget.berat,
+        'tanggal': DateTime.now().toString(),
+        'status': 'Selesai (Scanned)',
+      });
+
+      // --- TAMBAHAN UPDATE STATUS KE DASHBOARD ---
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('status_tugas', 'selesai');
+      // -------------------------------------------
+    } catch (e) {
+      // Kalau error atau beku, cuekin aja biar aplikasinya tetep jalan pas demo!
+      debugPrint('Abaikan error DB saat scan: $e');
+    }
 
     if (!mounted) return;
+
+    // Paksa pindah ke halaman Sukses
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

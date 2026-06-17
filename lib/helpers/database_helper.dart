@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart'; // Wajib untuk deteksi kIsWeb
+import 'package:flutter/foundation.dart'; // Pendeteksi kIsWeb
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart'; // Import SQLite Web
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -15,24 +16,23 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    String path = filePath;
-
-    // --- INI KUNCI JAWABAN DARI ANALISAMU ---
-    // Kalau BUKAN di Web (berarti di HP/Laptop), baru kita cari folder fisiknya
-    if (!kIsWeb) {
+    if (kIsWeb) {
+      // INI KUNCINYA: Pakai mode NoWebWorker!
+      // 100% SQLite asli, database beneran, TAPI ngelewatin error terminal Mac lu.
+      var factory = databaseFactoryFfiWebNoWebWorker;
+      return await factory.openDatabase(
+        filePath,
+        options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
+      );
+    } else {
+      // Mode HP Asli (Android/iOS)
       final dbPath = await getDatabasesPath();
-      path = join(dbPath, filePath);
+      final path = join(dbPath, filePath);
+      return await openDatabase(path, version: 1, onCreate: _createDB);
     }
-    // Kalau di Web, dia akan tetap pakai path = 'junkslab.db' aja!
-    // ----------------------------------------
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
   }
 
+  // Syarat Dosen: Sintaks SQLite Murni
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE limbah (
@@ -53,7 +53,7 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getAllLimbah() async {
     final db = await instance.database;
-    // Tampilkan dari yang paling baru di-scan (DESC)
+    // Tampilkan dari data yang paling baru di-scan
     return await db.query('limbah', orderBy: 'id DESC');
   }
 

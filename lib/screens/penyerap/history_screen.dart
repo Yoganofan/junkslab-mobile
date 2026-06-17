@@ -18,7 +18,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _loadHistory();
   }
 
-  // Fungsi penarik data yang kebal error saat di Web
   // Fungsi penarik data super kebal (Pakai Batas Waktu / Timeout)
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
@@ -29,9 +28,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         const Duration(seconds: 2),
       );
 
+      // --- INI LOGIKA FILTERNYA ---
+      // Cuma ambil data yang statusnya beneran udah di-scan
+      final riwayatAsli = data.where((item) => item['status'] == 'Selesai (Scanned)').toList();
+
       if (mounted) {
         setState(() {
-          _historyList = data;
+          // Masukin data yang udah difilter ke list tampilan
+          _historyList = riwayatAsli;
           _isLoading = false;
         });
       }
