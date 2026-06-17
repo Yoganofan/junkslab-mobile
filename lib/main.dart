@@ -13,23 +13,21 @@ import 'screens/admin/admin_provider.dart';
 import 'helpers/shared_pref_helper.dart';
 import 'screens/admin/pages/main_layout.dart';
 import 'screens/penyerap/main_penyerap.dart';
+import 'screens/penyedia/main_navigation.dart';
+import 'screens/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // --- SAKLAR SQLITE OTOMATIS ---
   if (kIsWeb) {
-    // Jika jalan di Google Chrome (Web), pakai mesin Web
     databaseFactory = databaseFactoryFfiWeb;
   } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    // Jika jalan di Laptop/PC biasa, pakai mesin Desktop
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  // (Jika di HP Android/iOS, dia otomatis pakai sqflite bawaan)
-  // ------------------------------
 
-  await SharedPrefHelper.setLoginStatus(true);
+  await SharedPrefHelper.setLoginStatus(false);
 
   runApp(
     MultiProvider(
@@ -43,17 +41,22 @@ void main() async {
   );
 }
 
-// ... (sisa kodingan GoRouter dan JunksLabApp ke bawah biarkan sama persis seperti sebelumnya) ...
-
-// ATUR RUTE NAVIGASI (Mendukung Admin & Penyerap)
+// ATUR RUTE NAVIGASI
 final GoRouter _router = GoRouter(
-  initialLocation:
-      '/penyerap', // << Memaksa aplikasi langsung ngebuka halaman kamu saat di-run
+  initialLocation: '/login',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const MainLayout()),
     GoRoute(
       path: '/penyerap',
       builder: (context, state) => const MainPenyerap(),
+    ),
+    GoRoute(
+      path: '/penyedia',
+      builder: (context, state) => const MainNavigation(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
     ),
   ],
 );
@@ -73,20 +76,47 @@ class JunksLabApp extends StatelessWidget {
           themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
           theme: ThemeData(
-            brightness: Brightness.light,
-            primarySwatch: Colors.green,
-            scaffoldBackgroundColor: const Color(0xFFF5F7F5),
-            cardColor: Colors.white,
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFFF7FAF5),
+            colorScheme: ColorScheme.fromSeed(
+              brightness: Brightness.light, 
+              seedColor: const Color(0xFF006B23),
+              primary: const Color(0xFF006B23),
+              onPrimary: Colors.white,
+              primaryContainer: const Color(0xFF1C8634),
+              onPrimaryContainer: const Color(0xFFF7FFF1),
+              surface: const Color(0xFFF7FAF5),
+              onSurface: const Color(0xFF191C1A),
+              onSurfaceVariant: const Color(0xFF3F4A3D),
+            ),
+            fontFamily: 'Inter',
+            cardTheme: const CardThemeData(
+              color: Colors.white,
+              elevation: 0,
+              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+            ),
           ),
-
           darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            primarySwatch: Colors.green,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            cardColor: const Color(0xFF1E1E1E),
-            dividerColor: Colors.grey[800],
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFF121212), 
+            colorScheme: ColorScheme.fromSeed(
+              brightness: Brightness.dark, 
+              seedColor: const Color(0xFF006B23),
+              primary: const Color(0xFFA8E05F), 
+              onPrimary: const Color(0xFF003910),
+              primaryContainer: const Color(0xFF005219),
+              onPrimaryContainer: const Color(0xFFC4F2A6),
+              surface: const Color(0xFF1A1C19), 
+              onSurface: const Color(0xFFE2E2E2), 
+              onSurfaceVariant: const Color(0xFFBFC9BE), 
+            ),
+            fontFamily: 'Inter',
+            cardTheme: const CardThemeData(
+              color: Color(0xFF1E201E), 
+              elevation: 0,
+              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+            ),
           ),
-
           routerConfig: _router,
         );
       },

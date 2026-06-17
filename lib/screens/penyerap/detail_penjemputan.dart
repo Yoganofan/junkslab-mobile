@@ -542,6 +542,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan>
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepItem('Tugas\nDiterima', true, true),
           _buildStepConnector(true),
@@ -593,7 +594,7 @@ class _DetailPenjemputanState extends State<DetailPenjemputan>
     return Expanded(
       child: Container(
         height: 3,
-        margin: const EdgeInsets.only(bottom: 30),
+        margin: const EdgeInsets.only(top: 17),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(2),
           color: isCompleted ? const Color(0xFF22C55E) : Colors.grey.shade200,

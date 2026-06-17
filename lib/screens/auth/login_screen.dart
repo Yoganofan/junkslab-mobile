@@ -1,330 +1,427 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import '../../helpers/shared_pref_helper.dart';
-import '../penyerap/main_penyerap.dart';
+import '../../helpers/penyedia_database_helper.dart'; 
+import 'package:junkslab/helpers/preferences_helper.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'yoga@junkslab.id');
-  final _passwordController = TextEditingController(text: '123456');
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>(); 
+  bool isLoginTab = true;
+  String selectedRole = 'Penyedia'; 
+  bool obscurePassword = true;
+  bool _isLoading = false; 
 
-  Future<void> _login() async {
-    // Simple validation
-    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Email dan password harus diisi!'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
+  final TextEditingController _identityController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+ 
+  final DatabaseHelper _databaseHelper = DatabaseHelper(); 
+
+  @override
+  void dispose() {
+    _identityController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+
+  void _handleAuth() async {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() => _isLoading = true);
 
-    // Simulate login delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    String inputIdentity = _identityController.text.trim();
+    String inputPassword = _passwordController.text;
 
-    await SharedPrefHelper.setLoginStatus(true);
-    await SharedPrefHelper.setUserName('Yoga Nofan');
+    if (isLoginTab) {
+      if (inputIdentity == 'admin' || inputIdentity == 'admin@junkslab.id') {
+        setState(() => _isLoading = false);
+        _showSnackbar('Berhasil masuk sebagai Admin!', Colors.green);
+        context.go('/');
+        return;
+      }
 
-    if (!mounted) return;
+      final user = await _databaseHelper.checkUserLogin(
+        inputIdentity, 
+        inputPassword, 
+        selectedRole,
+      );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const MainPenyerap()),
+      setState(() => _isLoading = false);
+
+      if (user != null) {
+        final prefsHelper = PreferencesHelper();
+        await prefsHelper.init();
+        await prefsHelper.setUserEmail(inputIdentity);
+        _showSnackbar('Berhasil masuk sebagai $selectedRole!', Colors.green);
+        if (selectedRole == 'Penyedia') {
+          context.go('/penyedia');
+        } else {
+          context.go('/penyerap'); 
+        }
+      } else {
+        _showSnackbar('Akun tidak ditemukan atau kata sandi salah untuk peran $selectedRole!', Colors.red);
+      }
+
+    } else {
+      final result = await _databaseHelper.registerUser(
+        inputIdentity, 
+        inputPassword, 
+        selectedRole,
+      );
+
+      setState(() => _isLoading = false);
+
+      if (result != -1) {
+        _showSnackbar('Pendaftaran akun $selectedRole berhasil! Silakan masuk.', Colors.green);
+        
+        setState(() {
+          isLoginTab = true;
+        });
+        _passwordController.clear();
+      } else {
+        _showSnackbar('Email atau No. Handphone sudah terdaftar sebelumnya!', Colors.red);
+      }
+    }
+  }
+
+  // Fungsi pembantu untuk mempermudah pemanggilan SnackBar error/sukses
+  void _showSnackbar(String pesan, Color warnaKonfirmasi) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(pesan),
+        backgroundColor: warnaKonfirmasi,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF7FAF5),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-
-              // --- BRANDING ---
-              Center(
-                child: Column(
-                  children: [
-                    // Logo icon
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF0A5C32), Color(0xFF14A05A)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0F7A44).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.recycling_rounded, color: Colors.white, size: 40),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'JunksLab',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F7A44),
-                        letterSpacing: -1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Platform Ekonomi Sirkular',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // --- LOGIN FORM ---
-              const Text(
-                'Masuk ke Akun',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Lanjutkan kontribusimu untuk bumi',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              // Email field
-              _buildLabel('Email'),
-              const SizedBox(height: 8),
-              _buildTextField(
-                controller: _emailController,
-                hint: 'Masukkan email',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 20),
-
-              // Password field
-              _buildLabel('Password'),
-              const SizedBox(height: 8),
-              _buildTextField(
-                controller: _passwordController,
-                hint: 'Masukkan password',
-                icon: Icons.lock_outline_rounded,
-                obscure: _obscurePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: Colors.grey.shade400,
-                    size: 20,
-                  ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Forgot password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Fitur reset password segera hadir!'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        backgroundColor: const Color(0xFF333333),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Lupa Password?',
-                    style: TextStyle(
-                      color: Color(0xFF0F7A44),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
+          child: Form(
+            key: _formKey, // Membungkus UI dengan widget Form
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+                // Logo Title
+                const Text(
+                  'JunksLab',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Hanken Grotesk',
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF006B23),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Login button
-              SizedBox(
-                width: double.infinity,
-                child: Container(
+                const SizedBox(height: 8),
+                const Text(
+                  'Solusi cerdas kelola limbah makanan untuk ekonomi sirkular.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF3F4A3D),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Tab Toggle
+                Container(
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0F7A44), Color(0xFF14A05A)],
-                    ),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0F7A44).withValues(alpha: 0.3),
-                        blurRadius: 12,
+                        color: const Color(0xFF006B23).withOpacity(0.05),
+                        blurRadius: 20,
                         offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => isLoginTab = true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isLoginTab ? const Color(0xFF006B23) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Masuk',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isLoginTab ? Colors.white : const Color(0xFF3F4A3D),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => isLoginTab = false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: !isLoginTab ? const Color(0xFF006B23) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Daftar',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: !isLoginTab ? Colors.white : const Color(0xFF3F4A3D),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: _isLoading ? null : _login,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Text(
-                                  'Masuk',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Role Selection Title
+                const Text(
+                  'Pilih Peran Anda',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3F4A3D),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Grid Peran
+                Row(
+                  children: [
+                    // Role 1: Penyedia
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => selectedRole = 'Penyedia'),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: selectedRole == 'Penyedia' ? const Color(0xFFF7FFF1) : Colors.white,
+                            border: Border.all(
+                              color: selectedRole == 'Penyedia' ? const Color(0xFF006B23) : const Color(0xFFBECABA),
+                              width: selectedRole == 'Penyedia' ? 2 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: selectedRole == 'Penyedia' ? const Color(0xFF006B23) : const Color(0xFFECEFEA),
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: selectedRole == 'Penyedia' ? Colors.white : const Color(0xFF006B23),
                                 ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Penyedia Limbah Makanan',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: selectedRole == 'Penyedia' ? const Color(0xFF006B23) : const Color(0xFF3F4A3D),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              // Register link
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Belum punya akun? ',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Fitur pendaftaran segera hadir!'),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            backgroundColor: const Color(0xFF333333),
+                    const SizedBox(width: 12),
+                    
+                    // Role 2: Penyerap
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => selectedRole = 'Penyerap'),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: selectedRole == 'Penyerap' ? const Color(0xFFF7FFF1) : Colors.white,
+                            border: Border.all(
+                              color: selectedRole == 'Penyerap' ? const Color(0xFF006B23) : const Color(0xFFBECABA),
+                              width: selectedRole == 'Penyerap' ? 2 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        );
-                      },
-                      child: const Text(
-                        'Daftar Sekarang',
-                        style: TextStyle(
-                          color: Color(0xFF0F7A44),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: selectedRole == 'Penyerap' ? const Color(0xFF006B23) : const Color(0xFFECEFEA),
+                                child: Icon(
+                                  Icons.recycling,
+                                  color: selectedRole == 'Penyerap' ? Colors.white : const Color(0xFF006B23),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Penyerap Limbah Makanan',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: selectedRole == 'Penyerap' ? const Color(0xFF006B23) : const Color(0xFF3F4A3D),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                
+                // Username Field
+                const Text(
+                  'Email atau No. Handphone',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF3F4A3D)),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _identityController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.email, color: Color(0xFF3F4A3D)),
+                    hintText: 'example@email.com',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFBECABA)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF006B23), width: 2),
+                    ),
+                  ),
+                  // Menambahkan logika validasi input email/no hp
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Kolom ini tidak boleh kosong';
+                    }
+                    if (value.length < 4) {
+                      return 'Masukkan identitas akun yang valid';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                
+                // Password Field
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Kata Sandi',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF3F4A3D)),
+                    ),
+                    if (isLoginTab) // Lupa password hanya muncul di tab login
+                      TextButton(
+                        onPressed: () {},
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                        child: const Text('Lupa sandi?', style: TextStyle(color: Color(0xFF006B23), fontSize: 13)),
+                      ),
+                  ],
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF3F4A3D)),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off, color: const Color(0xFF3F4A3D)),
+                      onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                    ),
+                    hintText: '••••••••',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFBECABA)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF006B23), width: 2),
+                    ),
+                  ),
+                  // Menambahkan logika validasi kata sandi
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Kata sandi tidak boleh kosong';
+                    }
+                    if (value.length < 6) {
+                      return 'Kata sandi minimal berisi 6 karakter';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                
+                // Auth Action Button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _handleAuth,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF006B23),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 4,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              isLoginTab ? 'Masuk Sekarang' : 'Daftar Akun Baru',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward),
+                          ],
+                        ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontWeight: FontWeight.w700,
-        fontSize: 14,
-        color: Color(0xFF1A1A1A),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType? keyboardType,
-    bool obscure = false,
-    Widget? suffixIcon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-          prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 22),
-          suffixIcon: suffixIcon,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF0F7A44), width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
     );

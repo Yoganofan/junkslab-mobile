@@ -18,8 +18,8 @@ class DashboardPenyerap extends StatefulWidget {
 
 class _DashboardPenyerapState extends State<DashboardPenyerap>
     with TickerProviderStateMixin {
-  int _saldoAsli = 12450;
-  int _saldoTampil = 12450;
+  int _saldoAsli = 12000;
+  int _saldoTampil = 12000;
 
   String _statusTugas = 'kosong';
   String _namaLimbah = '';
